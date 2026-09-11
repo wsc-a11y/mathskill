@@ -1,0 +1,20 @@
+{
+  "name": "mathmodel-marketplace",
+  "interface": {
+    "displayName": "MathModel 数模工具箱"
+  },
+  "plugins": [
+    {
+      "name": "mathmodel",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mathmodel"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

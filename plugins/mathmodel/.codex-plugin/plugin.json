@@ -1,0 +1,24 @@
+{
+  "name": "mathmodel",
+  "version": "0.1.0",
+  "description": "数学建模竞赛离散工具箱：建模、求解画图、流程图、论文撰写、论文验收、文献调研与科研绘图模板，各工具可独立触发按需使用。",
+  "author": {
+    "name": "MathModel"
+  },
+  "license": "MIT",
+  "keywords": ["math-modeling", "mathmodel", "mcm", "cumcm", "typst", "latex", "matplotlib", "figures", "paper"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "MathModel 数模工具箱",
+    "shortDescription": "数模竞赛离散工具集：建模、求解、画图、论文、验收与文献调研",
+    "longDescription": "面向数学建模竞赛（国赛/MCM/华为杯等）的离散工具集，各工具独立触发、按需组合：mathmodel-init 初始化项目骨架与环境约定；mathmodel-modeling 赛题分析与建模；mathmodel-figures 编程求解与数据图表；mathmodel-drawio 流程图等非数据图；mathmodel-paper 论文撰写（Typst/LaTeX 双引擎，内置 14 中 + 3 英全套模板）；mathmodel-verify 论文验收；mathmodel-lit-review 文献调研（检索论文、提取方法、产出参考文献）；mathmodel-figure-templates 11 种科研绘图模板；mathmodel-doctor 环境检查向导。",
+    "developerName": "MathModel",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "defaultPrompt": [
+      "帮我给这道数学建模题建模",
+      "把这题的模型跑出来并画图",
+      "找找这道题可借鉴的论文"
+    ]
+  }
+}

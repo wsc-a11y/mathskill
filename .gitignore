@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.mplconfig/
+绘图复刻/
+_tmp/
