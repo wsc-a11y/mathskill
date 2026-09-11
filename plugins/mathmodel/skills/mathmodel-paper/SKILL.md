@@ -43,6 +43,8 @@ huashubei, huaweibei, huazhongbei, mathorcup, mcm, shuweibei, stats, wuyibei
 
 华为杯、华中杯、五一杯统一使用 `huaweibei`、`huazhongbei`、`wuyibei` 作为模板。
 
+另有 LaTeX 专属模板 `zh/mrite-latex`（国赛样式：format.cls + 思源宋体 + 14 章结构，无 Typst 版）。其排版规范与其他模板族不同，见下方"mrite-latex 模板规范"小节。
+
 支持的英文模板（Typst + LaTeX 双版本）：
 
 ```text
@@ -354,6 +356,18 @@ A_code.typ
 ### 步骤 6：最后撰写摘要或总结
 
 在所有章节完成后撰写中文摘要或英文 Summary Sheet。必须包含每个子问题的方法和精确的数值结果。
+
+## mrite-latex 模板规范
+
+选用 `zh/mrite-latex` 模板时遵守以下专属规范（详见该模板目录内 README.md）：
+
+- 章节结构固定 14 章：`0.摘要` 到 `10.附录`，每问拆 `5.x.问题N的建立求解` + `5.x.1.分析与准备` + `5.x.2.建模与求解` 三个文件。
+- **摘要 ≤900 字、严格 1 页**：开头段 2 句 + 逐问摘要 + 结尾段 2 句。
+- **正文禁止分点符号**（1. 2. 3.）；**禁止加粗**（摘要和问题重述除外）。
+- **图宽 `0.8\textwidth`，表宽 `\textwidth`**，所有表格统一 `longtable` 样式。
+- **参考文献 GB/T 7714-2015 格式，8-15 条**（步骤 5 的文献落地按此格式转写）。
+- 必须用 `xelatex` 编译（format.cls 强制），跑两遍。
+- 字体由模板自带（`fonts/` 思源宋体），不要改 `Path = ./fonts/` 配置。
 
 ## LaTeX 写作要点
 

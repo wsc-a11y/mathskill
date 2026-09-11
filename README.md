@@ -42,7 +42,7 @@ cp -r plugins/mathmodel/skills/* ~/.codex/skills/
 | `$mathmodel-modeling` | 赛题分析、拆子问题、建模型、写建模报告 | "给这道题建模" |
 | `$mathmodel-figures` | 编程求解、跑实验、出结果表和数据图 | "把模型跑出来并画图" |
 | `$mathmodel-drawio` | 技术路线图、流程图、模型结构图等非数据图 | "画个求解流程图" |
-| `$mathmodel-paper` | 论文撰写（Typst/LaTeX 双引擎 + 14 中 3 英模板）+ 文献引用落地 | "写论文" |
+| `$mathmodel-paper` | 论文撰写（Typst/LaTeX 双引擎 + 15 中 3 英模板）+ 文献引用落地 | "写论文" |
 | `$mathmodel-verify` | 论文验收：结构、引用、数值一致性、编译 | "检查论文" |
 | `$mathmodel-lit-review` | 文献调研：检索论文、提取方法、产出参考文献 | "找找这题的论文和方法" |
 | `$mathmodel-figure-templates` | 11 种科研绘图模板（SHAP 组合图、泰勒图、和弦图等） | "画个云雨图" |
