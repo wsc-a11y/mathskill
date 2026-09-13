@@ -30,6 +30,7 @@ HUE_BUCKETS = [  # (名称, 色相区间起点, 终点)；近灰色单独归「�
     ("品红", 285, 345),
 ]
 MAX_RGB_DIST = math.sqrt(3 * 255**2)  # 归一化用
+NEUTRAL_SAT_THRESHOLD = 0.08  # 平均饱和度低于此值视为无彩色系
 
 
 @dataclass
@@ -75,8 +76,13 @@ def mean_saturation(colors: list[str]) -> float:
 
 def hue_bucket(rgb: tuple[float, float, float]) -> str:
     h, s, _ = rgb_to_hsv(rgb)
-    if s < 0.08:  # 近灰色
+    if s < NEUTRAL_SAT_THRESHOLD:  # 近灰色
         return "中性"
+    return hue_name(h)
+
+
+def hue_name(h: float) -> str:
+    """按色相角度返回色系名，用于近灰判定之外的纯色相分桶。"""
     for name, lo, hi in HUE_BUCKETS:
         if lo < hi:
             if lo <= h < hi:
@@ -107,16 +113,13 @@ def match_distance(palette: Palette, known_rgb: list[tuple[float, float, float]]
 
 def suggest_extra_color(palette: Palette, known_rgb: list[tuple[float, float, float]]) -> str | None:
     """从候选调色板的剩余颜色中挑补色：与已知色最小距离最大的颜色（保证区分度），
-    排除近黑白灰（S<0.08 或明度>0.95）作为填充色。"""
+    排除近黑白灰（不可作填充色）。"""
     used = set(range(len(known_rgb)))
     best, best_color = -1.0, None
     for i, color in enumerate(palette.colors):
-        if i in used:
+        if i in used or not is_fill_color(color):
             continue
         rgb = hex_to_rgb(color)
-        _, s, v = rgb_to_hsv(rgb)
-        if s < 0.08 or v > 0.95:
-            continue
         min_d = min(rgb_dist(rgb, k) for k in known_rgb)
         if min_d > best:
             best, best_color = min_d, color
@@ -141,15 +144,34 @@ def load_palettes() -> list[Palette]:
 
 
 SAT_TARGET = 0.35  # 顶刊淡色的目标平均饱和度：有彩低饱和，不是灰也不是艳
+MIN_SAT = 0.08  # 低于此值近灰：作填充色无法与背景及彼此区分
+MIN_VALUE = 0.20  # 低于此值近黑：作填充色与文字/边框糊成一片
+MAX_VALUE = 0.95  # 高于此值近白：作填充色印出来几乎看不见
+
+
+def is_fill_color(color: str) -> bool:
+    """判断该色能否用作填充色（排除近黑、近白、近灰）。"""
+    _, s, v = rgb_to_hsv(hex_to_rgb(color))
+    return s >= MIN_SAT and MIN_VALUE <= v <= MAX_VALUE
 
 
 def score_palette(
-    palette: Palette, known_rgb: list[tuple[float, float, float]], style: str
+    palette: Palette,
+    known_rgb: list[tuple[float, float, float]],
+    style: str,
+    need: int,
 ) -> float | None:
     """补色模式：匹配距离优先（色差过大返回 None 排除），离目标饱和度越近越优先；
-    整套模式：vivid 越高饱和越优先，否则离目标饱和度越近越优先。"""
-    sat = mean_saturation(palette.colors)
-    sat_term = -sat if style == "vivid" else abs(sat - SAT_TARGET)
+    整套模式：vivid 越高饱和越优先，否则离目标饱和度越近越优先。
+
+    饱和度只统计**实际会交付的前 need 色**，且这些色必须都能作填充色。
+    用整条调色板评分会排出「整条达标、交付色掺灰」的劣质候选。
+    """
+    used = palette.colors[:need]
+    if any(not is_fill_color(c) for c in used):
+        return None
+    mean_sat = mean_saturation(used)
+    sat_term = -mean_sat if style == "vivid" else abs(mean_sat - SAT_TARGET)
     if known_rgb:
         d = match_distance(palette, known_rgb)
         if d > 0.4:  # 与已知色系差太远，不协调，排除
@@ -159,12 +181,19 @@ def score_palette(
 
 
 def diversify(
-    candidates: list[tuple[float, Palette]], known_rgb: list[tuple[float, float, float]]
+    candidates: list[tuple[float, Palette]],
+    known_rgb: list[tuple[float, float, float]],
+    need: int,
 ) -> list[tuple[float, Palette]]:
-    """按候选自身主导色相分桶去重：每个色系只保留分数最低的 1 个，一批同时给出不同风格。"""
+    """按候选自身主导色相分桶去重：每个色系只保留分数最低的 1 个，一批同时给出不同风格。
+
+    主导色相取自**实际交付的前 need 色**，与 score_palette 的评分口径保持一致。
+    """
     buckets: dict[str, tuple[float, Palette]] = {}
     for score, pal in candidates:
-        bucket = hue_bucket(hex_to_rgb(pal.colors[0]))
+        used = pal.colors[:need]
+        h = sum(rgb_to_hsv(hex_to_rgb(c))[0] for c in used) / len(used)
+        bucket = hue_name(h)
         if bucket not in buckets or score < buckets[bucket][0]:
             buckets[bucket] = (score, pal)
     return sorted(buckets.values())
@@ -232,12 +261,12 @@ def main() -> None:
             continue
         if mean_saturation(pal.colors) < 0.12:  # 灰系排除，顶刊淡色是有彩低饱和而非灰色
             continue
-        s = score_palette(pal, known_rgb, args.style)
+        s = score_palette(pal, known_rgb, args.style, need)
         if s is None:
             continue
         pool.append((s, pal))
 
-    candidates = diversify(pool, known_rgb)[args.offset : args.offset + args.top]
+    candidates = diversify(pool, known_rgb, need)[args.offset : args.offset + args.top]
     if not candidates:
         raise SystemExit("没有找到符合要求的调色板，试试 --kind all 或减少颜色数")
 

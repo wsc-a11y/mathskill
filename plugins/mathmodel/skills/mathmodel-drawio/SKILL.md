@@ -7,14 +7,11 @@ description: "数学建模非数据型图示绘制工具。根据 ANALYSIS_MODEL
 
 本工具只负责论文中的**非数据型图示**，例如技术路线图、求解流程图、模型结构图、数据处理流程图、变量关系图、指标体系图等。前序报告文件存在则读取，不存在时以用户描述为准。
 
-## 数学建模规范参考
-
-如需领域判断，读取 `../mathmodel-references/math_modeling_norms.md` 中的“图表与可视化”和“非数据图工具选择”小节。该文件只作为规范知识库，不要求为了凑数量生成额外图示。
-
 ## 边界
 
 - 负责：DrawIO 源文件、非数据图 PDF、图示生成记录。
-- 不负责：折线图、柱状图、散点图、热力图、箱线图、雷达图等数据图。这些由 `$mathmodel-figures` 生成。
+- 不负责：折线图、柱状图、散点图、热力图、箱线图、雷达图等数据图。这些由 `$mathmodel-figures`（或 `mathmodel-figure-templates`）生成。
+- 配色遵循下文 Step 3 的「节点形状-语义-配色对照表」，不要另造一套颜色。
 - 不重跑模型、不修改 `code/`，不改写 `reports/RESULTS_REPORT.md` 的数值结论。
 
 ## 必须产出
@@ -141,18 +138,27 @@ XMLEOF
 
 ### Step 4: 导出 PDF
 
-优先用可用的 DrawIO 命令导出 PDF：
+**先定位 drawio 可执行文件，不要只凭 `command -v` 就断定"未安装"**：`draw.io` 桌面版常装在标准位置但没加 PATH。按以下顺序找：
 
 ```bash
 DRAWIO_BIN="$(command -v drawio 2>/dev/null || command -v draw.io 2>/dev/null || command -v draw.io.exe 2>/dev/null || true)"
+[ -z "$DRAWIO_BIN" ] && for p in \
+  "/c/Program Files/draw.io/draw.io.exe" \
+  "/c/Users/$USER/AppData/Local/Programs/draw.io/draw.io.exe" \
+  "/d/draw.io-"*"-windows/draw.io.exe" \
+  "/opt/draw.io/draw.io"; do
+  [ -x "$p" ] && { DRAWIO_BIN="$p"; break; }
+done
+
 if [ -n "$DRAWIO_BIN" ]; then
-  "$DRAWIO_BIN" --export --format pdf --crop --output figures/fig_roadmap.pdf figures/fig_roadmap.drawio
+  "$DRAWIO_BIN" --export --format pdf --crop --no-sandbox \
+    --output figures/fig_roadmap.pdf figures/fig_roadmap.drawio
 else
-  echo "DrawIO command not found; keep .drawio source and record export failure."
+  echo "未找到 drawio 可执行文件；保留 .drawio 并记录导出失败。"
 fi
 ```
 
-如果无法导出 PDF，保留 `.drawio`，在 `reports/DRAWIO_REPORT.md` 记录失败原因和建议导出命令。
+首次运行可能弹一个 Electron 窗口，属正常；`--no-sandbox` 用于规避沙箱报错。drawio 把文字转成矢量路径，导出的 PDF 无文本层是预期行为，不是中文坏了。若导出失败，保留 `.drawio` 并在 `reports/DRAWIO_REPORT.md` 记录失败原因和建议导出命令。
 
 ### Step 5: 自检和修复
 
